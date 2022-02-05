@@ -1,0 +1,109 @@
+<html>
+  <head>
+
+    <link rel="stylesheet" href="../node_modules/leaflet/dist/leaflet.css"/>
+    <script src="index.js" type="module"></script>
+
+    <!--<script src="../node_modules/leaflet/dist/leaflet.js"></script>-->
+
+    <!--
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Roboto:wght@100,400&family=Zen+Tokyo+Zoo&display=swap" rel="stylesheet">
+    -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Roboto:wght@100;400&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="main.css"/>
+  </head>
+
+  <body onload="MainWindow.onload('map')">
+      <div id='modal-shadow' class='modal-shadow'></div>
+      <div class='header' id='header' >
+        rfparty
+      </div>
+
+      <div class='search-bar'>
+        <input id='search-input' class='search-input' type="search" placeholder="search" />
+      </div>
+  
+      <div class="status-area">
+        <span id='status-text'>Status</span><span id='status-dot' class='green-dot'></span>
+      </div>
+
+      <div id='center-modal' class="center-modal">
+        <div class="rainbows hidden" id='logo' >rfparty</div>
+      
+        <div id='loading-bar' class='loading-bar hidden'>
+          <center><span>Loading <span id='loading-value'>0</span>%</span></center>
+          <progress id="loading-progress-bar" class='loading-progress-bar' max="100" value="0"></progress>
+          <textarea id='loading-details' class='loading-details' readonly disabled>
+          </textarea>
+        </div>
+      </div>
+
+      <div class='device-info hidden'>
+        <h3 id='device-info-name'>address</h3>
+        <span id='device-info-address'>address</span>
+        <span id='device-info-company'>company</span>
+        <!--<br>
+        <span id='device-info-company'>company</span>
+
+        <h4>
+          <span id='device-info-product'>product</span>
+          (<span id='device-info-product-code'>code</span>)
+        </h4>-->
+
+        <h4>Services</h4>
+
+        <span id='device-info-services'></span>
+      </div>
+
+      <div id="map" class="content"></div>
+
+            <!-- The Modal -->
+      <div id="setup-modal" class="modal hidden">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+          <form name="setupForm">
+          <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2>Setup</h2>
+          </div>
+          <div class="modal-body">
+            
+              <p>
+                <labal for="scanDBFile">scan db</labal>
+                <input id="scanDBFile" type="file" name="scanDBFile" accept=".db"/>
+              </p>
+          
+              <p>
+                <labal for="gpxFiles">gpx files</labal>
+                <input id='gpxFiles' type="file" name="gpxFiles[]" accept=".gpx" multiple/>
+              </p>
+
+              <br>
+    
+              <p>
+                <center><button class='setup-submit' type="submit">load</button></center>
+              </p>
+          </div>
+          <div class="modal-footer" onclick='gotoGithub()'>
+            <!-- <h3>About  
+              <a href='https://github.com/datapartyjs/teleop-xyz' target='_'> GitHub</a>
+            </h3> -->
+          </div>
+          </form>
+        </div>
+
+      </div>
+
+      
+
+      <footer class='footer'>
+      </span> rfparty.xyz - <span id='version-text'></span> © 2021 <a href='https://www.dataparty.xyz/'>dataparty llc</a>
+    </footer>
+  
+  </body>
+</html>

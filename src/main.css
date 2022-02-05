@@ -1,0 +1,521 @@
+* {
+  margin:0;
+  padding:0;
+}
+
+html, body {
+  height: 100%
+}
+
+body{
+  display: flex;
+  align-items: stretch;
+  background-color: rgb(15, 22, 20);
+  font-family: 'Roboto', sans-serif;
+}
+
+.header {
+  visibility: hidden;
+  display: none;
+  position: absolute;
+  top: 0px;
+  left: 15px;
+  font-family: 'Permanent Marker';
+}
+
+.hidden {
+  visibility: hidden;
+  display: none;
+}
+
+.content {
+  z-index: 0;
+  position: absolute;
+  top: 20px;
+  height: calc(100vh - 20px);
+  width: 100vw;
+  /*max-width: 100%;
+  max-height: 100%;*/
+  /*min-height: calc(100vmin - 40px);*/
+  /* 80px header + 40px footer = 120px  */
+  background: rgb(7, 48, 48);
+}
+
+.device-info {
+  z-index: 1;
+  position: absolute;
+  opacity: 1;
+  padding: 20px;
+  margin: 10px;
+  font-family: Roboto;
+  font-weight: 400;
+  font-size: 14px;
+  color: rgb(187, 206, 187);
+  left: 5vw;
+  top:30vh;
+
+  background-color: rgba(0, 0, 0, 0.763);
+  color: white;
+  
+  border-width: 0px;
+
+  display:flex;
+  flex-direction: column;
+  align-items: left;
+}
+
+.search-bar {
+  z-index: 1;
+  opacity: 0.9;
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+
+  left: 60px;
+  top:60px;
+
+}
+
+.search-input {
+  font-size: 24px;
+  width: 35vw;
+  height: 1em;
+  padding: 20px;
+  color: black;
+  font-family: 'Roboto';
+  font-weight: 100;
+  color: rgb(0, 0, 0);
+  border-color: #e6e5e8;
+  border-style: dashed;
+  border-width: 1px;
+  background-color: white;
+}
+
+.loading-bar {
+
+  opacity: 90%;
+
+  z-index: 2; /* Sit on top */
+  position: absolute;
+  
+  color: white;
+  bottom: 10vh;
+  top: 20vh;
+  left:20vw;
+  width: 60vw;
+
+  font-family: 'Roboto';
+  font-weight: 200;
+  font-size: 24px;
+  padding: 0px;
+  margin-top: 80;
+  margin-bottom: 20;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+progress::-moz-progress-bar { background: white; }
+progress::-webkit-progress-value { background: white; }
+progress { color: white; }
+
+
+.loading-progress-bar {
+  width: 100%;
+  height: 8px;
+
+  margin: 10px;
+
+  color: white;
+  background-color: grey;
+  border-radius: 0px;
+}
+
+
+.loading-details {
+  width: 100%;
+  height: 100%;
+  margin: 10px;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.349);
+  color: white;
+  
+  border-width: 1px;
+  font-family: Roboto;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+textarea::-webkit-scrollbar {
+  width: 1em;
+}
+
+textarea::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+
+textarea::-webkit-scrollbar-thumb {
+background-color: darkgrey;
+outline: 1px solid slategrey;
+}
+
+.status-area {
+  position:fixed;
+  
+  right: 5px;
+
+  top:2px;
+  font-size: 15px;
+
+  z-index: 1;
+  color: white;
+  
+  margin: 0 0 0 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: row;
+}
+
+
+.green-dot {
+  right:0;
+  
+  height: 15px;
+  width: 15px;
+  color: rgb(49, 77, 57);
+  background-color: rgb(66, 114, 79);
+  border-radius: 50%;
+  border-width: 1px;
+  border-color:rgb(255, 255, 255);
+  display: table-cell;
+  vertical-align: middle;
+
+  margin: 0 0 0 5px;
+}
+
+
+footer {
+  position: fixed; /* Stay in place */
+  z-index: 1;
+  height: 20px;
+  color: rgba(192, 191, 191, 0.897);
+  left: 5px;
+  bottom: 0px;
+  font-size: 15px;
+  text-align: right;
+
+  margin: 0 0 0 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: row;
+}
+
+@media only screen and (min-width: 550px) {
+  .header {
+
+    visibility: visible;
+    display: inline;
+
+    z-index: 0;
+    background: rgb(15, 22, 20);
+    height: 40px;
+    color: white;
+    font-family: 'Permanent Marker';
+    font-size: 30px;
+    margin: 0 0 0 0;
+    padding: 0;
+    text-align: left;
+    text-decoration: none;
+    line-height: 40px; /* same as height! */
+  }
+
+  footer {
+    height: 20px;
+    right: 5px;
+    bottom: 2px;
+    font-size: 18px;
+  }
+
+  .content {
+    top: 40px;
+    height: calc(100vh - 40px);
+  }
+
+  .status-area {
+    top:12px;
+    right: 15px;
+    font-size: 18px;
+  }
+
+
+  .green-dot {
+    height: 18px;
+    width: 18px;
+  }
+
+
+}
+
+
+  /* The Modal (background) */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    
+  }
+  
+  /* Modal Content */
+  .modal-content {
+    position: fixed;
+    bottom: 20px;
+    background-color: #fefefe;
+    width: 100%;
+    -webkit-animation-name: slideIn;
+    -webkit-animation-duration: 0.4s;
+    animation-name: slideIn;
+    animation-duration: 0.4s;
+    font-size: 24px;
+  }
+
+  .setup-submit {
+    font-size: 24px;
+    padding: 0px 24px;
+  }
+  
+  /* The Close Button */
+  .close {
+    color: white;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  
+  .modal-header {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+  }
+  
+  .modal-body {padding: 2px 16px;}
+  
+  .modal-footer {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+  }
+  
+  /* Add Animation */
+  @-webkit-keyframes slideIn {
+    from {bottom: -300px; opacity: 0} 
+    to {bottom: 0; opacity: 1}
+  }
+  
+  @keyframes slideIn {
+    from {bottom: -300px; opacity: 0}
+    to {bottom: 0; opacity: 1}
+  }
+  
+  @-webkit-keyframes fadeIn {
+    from {opacity: 0} 
+    to {opacity: 1}
+  }
+  
+  @keyframes fadeIn {
+    from {opacity: 0} 
+    to {opacity: 1}
+  }
+
+
+  .fadeOut{
+
+    animation-name: fadeOut;
+    animation-duration: 2s
+  }
+
+  @keyframes fadeOut {
+    to {opacity: 0; }
+    from {opacity: 1;}
+  }
+
+  .modal-shadow {
+    z-index: 1;
+    width: 100%;
+    height: 100%; /* Full height */
+    position: absolute;
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    -webkit-animation-name: fadeIn; /* Fade in the background */
+    -webkit-animation-duration: 0.4s;
+    animation-name: fadeIn;
+    animation-duration: 0.4s
+  }
+
+
+.center-modal {
+  z-index: 1; /* Sit on top */
+
+  margin:0;
+  position: absolute;
+  left: 0;
+  right:0;
+  top: 5vw;
+  bottom: 0;
+  
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+
+}
+
+.rainbows {
+  z-index: 3; /* Sit on top */
+  text-align: center;
+
+  margin: 0;
+  
+  font-family: 'Permanent Marker';
+  font-size: 20vmin;
+  color: #fff;
+  text-shadow: -4px 4px #ef3550,
+               -8px 8px #f48fb1,
+               -12px 12px #7e57c2,
+               -16px 16px #2196f3,
+               -20px 20px #26c6da,
+               -24px 24px #43a047,
+               -28px 28px #eeff41,
+               -32px 32px #f9a825,
+               -36px 36px #ff5722;
+
+  animation: rainbowIn 2s ease-in
+}
+
+.rainbow-busy {
+  animation: rainbowShift infinite 10s linear
+}
+
+@keyframes rainbowIn {
+  from {opacity: 0; font-size: 5px;
+    text-shadow: 0px 0px #ef3550,
+                 0px 0px #f48fb1,
+                 0px 0px #7e57c2,
+                 0px 0px #2196f3,
+                 0px 0px #26c6da,
+                 0px 0px #43a047,
+                 0px 0px #eeff41,
+                 0px 0px #f9a825,
+                 0px 0px #ff5722;
+  } 
+  to {opacity: 1; font-size: 20vmin;
+    text-shadow: -4px 4px #ef3550,
+               -8px 8px #f48fb1,
+               -12px 12px #7e57c2,
+               -16px 16px #2196f3,
+               -20px 20px #26c6da,
+               -24px 24px #43a047,
+               -28px 28px #eeff41,
+               -32px 32px #f9a825,
+               -36px 36px #ff5722;
+  } 
+}
+
+@keyframes rainbowOut {
+  to {opacity: 0; font-size: 5px;
+    text-shadow: 0px 0px #ef3550,
+                 0px 0px #f48fb1,
+                 0px 0px #7e57c2,
+                 0px 0px #2196f3,
+                 0px 0px #26c6da,
+                 0px 0px #43a047,
+                 0px 0px #eeff41,
+                 0px 0px #f9a825,
+                 0px 0px #ff5722;
+  } 
+  from {opacity: 1; font-size: 20vmin;
+    text-shadow: -4px 4px #ef3550,
+               -8px 8px #f48fb1,
+               -12px 12px #7e57c2,
+               -16px 16px #2196f3,
+               -20px 20px #26c6da,
+               -24px 24px #43a047,
+               -28px 28px #eeff41,
+               -32px 32px #f9a825,
+               -36px 36px #ff5722;
+  }
+}
+
+  @keyframes rainbowShift {
+    from {opacity: 1; font-size: 20vmin;
+      text-shadow: -4px 4px #ef3550,
+          -8px 8px #f48fb1,
+          -12px 12px #7e57c2,
+          -16px 16px #2196f3,
+          -20px 20px #26c6da,
+          -24px 24px #43a047,
+          -28px 28px #eeff41,
+          -32px 32px #f9a825,
+          -36px 36px #ff5722;
+    }
+    25% {font-size: 20vmin;
+      opacity: 0.70;
+      text-shadow: 4px 4px #ef3550,
+          8px 8px #f48fb1,
+          12px 12px #7e57c2,
+          16px 16px #2196f3,
+          20px 20px #26c6da,
+          24px 24px #43a047,
+          28px 28px #eeff41,
+          32px 32px #f9a825,
+          36px 36px #ff5722;
+    }
+    50% {
+        opacity: 1;
+        font-size: 20vmin;
+        text-shadow: 4px -4px #ef3550,
+        8px -8px #f48fb1,
+        12px -12px #7e57c2,
+        16px -16px #2196f3,
+        20px -20px #26c6da,
+        24px -24px #43a047,
+        28px -28px #eeff41,
+        32px -32px #f9a825,
+        36px -36px #ff5722;
+  }
+  75% {
+      opacity: 0.7;
+      font-size: 20vmin;
+      text-shadow: -4px -4px #ef3550,
+      -8px -8px #f48fb1,
+      -12px -12px #7e57c2,
+      -16px -16px #2196f3,
+      -20px -20px #26c6da,
+      -24px -24px #43a047,
+      -28px -28px #eeff41,
+      -32px -32px #f9a825,
+      -36px -36px #ff5722;
+  }
+  to {opacity: 1; font-size: 20vmin;
+    text-shadow: -4px 4px #ef3550,
+        -8px 8px #f48fb1,
+        -12px 12px #7e57c2,
+        -16px 16px #2196f3,
+        -20px 20px #26c6da,
+        -24px 24px #43a047,
+        -28px 28px #eeff41,
+        -32px 32px #f9a825,
+        -36px 36px #ff5722;
+  }
+}
