@@ -1,6 +1,6 @@
 {
   "name": "rfparty",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "source": "src/index.html",
   "scripts": {
@@ -22,7 +22,7 @@
     "xml-js": "^1.6.11"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "http-server": "^14.1.0",
     "parcel": "^2.2.1"

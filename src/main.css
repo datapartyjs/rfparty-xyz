@@ -195,22 +195,36 @@ outline: 1px solid slategrey;
   margin: 0 0 0 5px;
 }
 
+.footer-logo {
+  font-family: 'Permanent Marker';
+  position: relative;
+  top: -2px;
+}
 
-footer {
+.footer-left {
   position: fixed; /* Stay in place */
   z-index: 1;
   height: 20px;
   color: rgba(192, 191, 191, 0.897);
   left: 5px;
-  bottom: 0px;
-  font-size: 15px;
-  text-align: right;
+  bottom: 3px;
+  font-size: 18px;
 
   margin: 0 0 0 0;
   padding: 0;
+}
 
-  display: flex;
-  flex-direction: row;
+.footer-right {
+  position: fixed; /* Stay in place */
+  z-index: 1;
+  height: 20px;
+  color: rgba(192, 191, 191, 0.897);
+  right: 5px;
+  bottom: 0px;
+  font-size: 10px;
+
+  margin: 0 0 0 0;
+  padding: 0;
 }
 
 @media only screen and (min-width: 550px) {
@@ -232,7 +246,15 @@ footer {
     line-height: 40px; /* same as height! */
   }
 
-  footer {
+  .footer {
+    height: 20px;
+    left: 5px;
+    bottom: 2px;
+    font-size: 18px;
+  }
+
+
+  .footer-right {
     height: 20px;
     right: 5px;
     bottom: 2px;
