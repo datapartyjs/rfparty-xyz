@@ -6,7 +6,6 @@ import {LoadingProgress} from './loading-progress'
 
 
 
-
 export class MainWindow {
   static onload(divId) {
     console.log('RFParty.onload')
@@ -220,10 +219,9 @@ export class MainWindow {
       const input = event.target.value
 
       console.log('search input', input)
+      window.rfparty.handleSearch.bind(window.rfparty)(input)
 
-      const tokens = input.split(' ')
 
-      window.rfparty.handleSearch.bind(window.rfparty)(tokens)
     })
   }
 }

@@ -230,20 +230,60 @@ const UUID16 = {
 };
 
 const APPLE_Continuity = {
+  '02': 'iBeacon',
   '03': 'AirPrint',
   '05': 'AirDrop',
   '06': 'HomeKit',
   '07': 'ProximityPairing',
-  '08': 'HeySiri',
-  '09': 'AirPlay',
+  '08': 'Siri',
+  '09': 'AirPlayTarget',
+  '0a': 'AirPlaySource',
   '0b': 'MagicSwitch',
   '0c': 'Handoff',
-  '0d': 'TetheringTargetPresence',
-  '0e': 'TetheringSourcePresence',
+  '0d': 'TetheringTarget',
+  '0e': 'TetheringSource',
   '0f': 'NearbyAction',
-  '10': 'NearbyInfo'
+  '10': 'NearbyInfo',
+  '12': 'FindMy'
+}
+
+const NearbyInfoActionCode = {
+  0x00: 'unknown',
+  0x01: 'reporting disabled',
+  0x03: 'idle',
+  0x05: 'audio + locked',
+  0x07: 'active',
+  0x09: 'video playing',
+  0x0a: 'watch worn + unlocked',
+  0x0b: 'recent activity',
+  0x0d: 'user driving',
+  0x0e: 'call active'
+}
+
+const NearbyActionType = {
+  0x01: 'Apple TV Setup',
+  0x04: 'Mobile Backup',
+  0x05: 'Watch Setup',
+  0x06: 'Apple TV Pair',
+  0x07: 'Internet Relay',
+  0x08: 'WiFi Password',
+  0x09: 'iOS Setup',
+  0x0A: 'Repair',
+  0x0B: 'Speaker Setupd',
+  0x0C: 'Apple Pay',
+  0x0D: 'Whole Home Audio Setup',
+  0x0E: 'Developer Tools Pairing Request',
+  0x0F: 'Answered Call',
+  0x10: 'Ended Call',
+  0x11: 'DD Ping',
+  0x12: 'DD Pong',
+  0x13: 'Remote Auto Fill',
+  0x14: 'Companion Link Proximity',
+  0x15: 'Remote Management',
+  0x16: 'Remote Auto Fill Pong',
+  0x17: 'Remote Display'
 }
 
 module.exports = {
-  UUID, UUID16, COMPANY_IDENTIFIERS, APPLE_Continuity
+  UUID, UUID16, COMPANY_IDENTIFIERS, APPLE_Continuity, NearbyInfoActionCode, NearbyActionType
 }
