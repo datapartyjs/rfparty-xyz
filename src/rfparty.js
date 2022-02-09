@@ -1,6 +1,8 @@
 //import { point } from 'leaflet'
 //import { scan } from 'node-wifi'
 
+import { last } from 'lodash'
+
 //const Debug = require('debug')('rfparty')
 const Leaflet = require('leaflet')
 const JSON5 = require('json5')
@@ -11,6 +13,8 @@ const Loki = require('lokijs')
 const moment = require('moment')
 const EventEmitter = require('last-eventemitter')
 
+import * as UUID16_TABLES from './16bit-uuid-tables'
+import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
 const DeviceIdentifiers = require('./device-identifiers')
 
 const JSONViewer = require('json-viewer-js')
@@ -74,6 +78,8 @@ export class RFParty extends EventEmitter {
     this.showAllTracks = false
     this.showAwayTracks = false
 
+    this.detailsViewer = null
+
     this.map = Leaflet.map(divId,{
       attributionControl: false
     }).setView([47.6, -122.35], 13)
@@ -118,6 +124,8 @@ export class RFParty extends EventEmitter {
 
     this.deviceLayers = {}
     this.searchResults = null
+    this.lastRender = null
+    this.lastQuery = null
 
     this.scanDb = null
     //this.gpx = {}
@@ -134,7 +142,10 @@ export class RFParty extends EventEmitter {
 
     console.log('found', awayTime.length, 'away time periods')
 
-    let devices = []
+    this.lastQuery = {duration: {
+      $gt: 30*60000
+    }}
+
 
     for (let away of awayTime) {
       let track = this.getTrackByTime(away.starttime, away.endtime)
@@ -149,20 +160,21 @@ export class RFParty extends EventEmitter {
         Leaflet.polyline(latlngs, { color: 'yellow', opacity: 0.74, weight: '2' }).addTo(this.map)
       }
 
-      let bleDevices = this.db.getCollection('ble').find({
-        lastseen: {
-          $between: [away.starttime, away.endtime]
-        },
-        duration: {
-          $gt: 30*60000
-        }
-      })
-
-      devices = devices.concat(bleDevices)
-
     }
 
-    let searchEndTime = new moment()
+    await this.handleSearch('duration')
+
+    this.map.on('moveend', ()=>{
+
+      if(!this.lastRender){ return }
+      if(!this.lastQuery){ return }
+
+      if(this.lastRender.drawable != this.lastRender.onscreen){
+        this.doQuery(this.lastQuery)
+      }
+    })
+
+    /*let searchEndTime = new moment()
     let searchDuration = searchEndTime.diff(searchStartTime)
     
     this.emit('search-finished', {devices, searchDuration})
@@ -181,7 +193,7 @@ export class RFParty extends EventEmitter {
 
     let updateEndTime = new moment()
     let updateDuration = updateEndTime.diff(searchStartTime)
-    this.emit('update-finished', {devices, updateDuration, searchDuration, renderDuration})
+    this.emit('update-finished', {devices, updateDuration, searchDuration, renderDuration})*/
 
   }
 
@@ -302,7 +314,10 @@ export class RFParty extends EventEmitter {
       return
     }
 
+    await this.doQuery(query, updateStartTime)
+  }
 
+  async doQuery(query, updateStartTime=new moment()){
     console.log('running query...', query)
 
     this.emit('search-start', {query})
@@ -314,7 +329,7 @@ export class RFParty extends EventEmitter {
     let searchEndTime = new moment()
     let searchDuration = searchEndTime.diff(searchStartTime)
     
-    this.emit('search-finished', {query, devices, searchDuration})
+    this.emit('search-finished', {query, render: {count: devices.length}, searchDuration})
 
 
     let durations = {searchDuration}
@@ -335,13 +350,16 @@ export class RFParty extends EventEmitter {
       durations.renderDuration = renderDuration
 
 
-      this.emit('render-finished', {query, devices, renderDuration})
+      this.emit('render-finished', {query, render: this.lastRender, renderDuration})
     }
 
     let updateEndTime = new moment()
     let updateDuration = updateEndTime.diff(updateStartTime)
-    this.emit('update-finished', {query, devices, updateDuration, ...durations})
+    this.emit('update-finished', {query, render: this.lastRender, updateDuration, ...durations})
+
+    this.lastQuery = query
   }
+
 
   parseServiceSearch(service, terms){
     let query = {}
@@ -363,12 +381,16 @@ export class RFParty extends EventEmitter {
   }
 
   async renderBleDeviceList(bleDevices){
+    this.lastRender = {
+      count: bleDevices.length,
+      onscreen: 0,
+      drawable: 0
+    }
+
     console.log('\trendering', bleDevices.length, 'ble devices')
 
-    if(this.searchResults != null){
-      this.map.removeLayer(this.searchResults)
-      delete this.searchResults
-    }
+    let restrictToBounds = this.restrictToBounds || bleDevices.length > 3000
+
 
     let layer = Leaflet.layerGroup()
 
@@ -380,10 +402,24 @@ export class RFParty extends EventEmitter {
       count++
       if((count % 500) == 0){ await delay(1) }
 
-      let pt = this.getTrackPointByTime(dev.lastseen)
+      let lastPt = dev.lastlocation
+      let firstPt = dev.firstlocation
 
-      if (pt) {
-        let lastCircle = Leaflet.circle([pt.lat, pt.lon], { color: 'white', radius: 10, fill:true, weight:1, opacity: 1, fillOpacity:0.3, fillColor:'white' })
+      if(!lastPt || !firstPt){ continue }
+
+      let corner1 = new Leaflet.LatLng(lastPt.lat, lastPt.lon)
+      let corner2 = new Leaflet.LatLng(firstPt.lat, firstPt.lon)
+
+      let bounds = new Leaflet.LatLngBounds(corner1, corner2)
+
+      this.lastRender.drawable++
+      if(restrictToBounds == true && !this.map.getBounds().intersects(bounds)) { continue }
+
+      this.lastRender.onscreen++
+      
+
+      if (lastPt) {
+        let lastCircle = Leaflet.circle([lastPt.lat, lastPt.lon], { color: 'white', radius: 10, fill:true, weight:1, opacity: 1, fillOpacity:0.3, fillColor:'white' })
         layer.addLayer(lastCircle)
 
         let onclick = (event)=>{
@@ -397,11 +433,11 @@ export class RFParty extends EventEmitter {
 
         lastCircle.on('click', onclick)
 
-        let firstPt = this.getTrackPointByTime(dev.firstseen)
+
 
         if(firstPt){
           let line = Leaflet.polyline([
-            this.trackToLatLonArray([firstPt, pt])
+            this.trackToLatLonArray([firstPt, lastPt])
           ], { color: 'blue', opacity: 0.5, weight: '5' })
 
           layer.addLayer(line)
@@ -423,8 +459,19 @@ export class RFParty extends EventEmitter {
       }
     }
 
-    this.searchResults = layer
+    
+
+    
     layer.addTo(this.map)
+
+    if(this.searchResults != null){
+      this.map.removeLayer(this.searchResults)
+      delete this.searchResults
+    }
+
+    this.searchResults = layer
+
+    return
   }
 
   getBLEDevice(mac){
@@ -522,7 +569,7 @@ export class RFParty extends EventEmitter {
 
       while (details.firstChild) { details.removeChild(details.firstChild) }
 
-      let detailsViewer = new JSONViewer({
+      this.detailsViewer = new JSONViewer({
         container: details,
         data: JSON.stringify(device),
         theme: 'dark',
@@ -755,10 +802,19 @@ export class RFParty extends EventEmitter {
         await delay(10)
       }
 
+
+      let firstlocation = this.getTrackPointByTime(start)
+      if(firstlocation){ firstlocation = {lat: firstlocation.lat, lon: firstlocation.lon} }
+      
+      let lastlocation = this.getTrackPointByTime(end)
+      if(lastlocation){ lastlocation = {lat: lastlocation.lat, lon: lastlocation.lon} }
+
       let duration = Math.abs( moment(start).diff(end) )
       let doc = {
         firstseen: start,
         lastseen: end,
+        firstlocation: firstlocation,
+        lastlocation,
         duration,
         product: [],
         services: [],
@@ -992,19 +1048,32 @@ export class RFParty extends EventEmitter {
 
 
   static lookupDeviceCompany(code){
-    return  DeviceIdentifiers.COMPANY_IDENTIFIERS[code] 
+    return  MANUFACTURER_TABLE.Company[code] 
   }
   
 
   static lookupAppleService(code){
     return DeviceIdentifiers.APPLE_Continuity[code]
   }
+
+  static lookupUuid16(uuid){
+    const types = Object.keys(UUID16_TABLES)
+
+    for(let type of types){
+      let found = UUID16_TABLES[type][uuid]
+
+      if(found){
+        return '/'+type+'/'+found
+      }
+    }
+  }
   
   static lookupDeviceUuid(uuid){
     let deviceType = null
   
     if(uuid.length == 4){
-      deviceType = DeviceIdentifiers.UUID16[uuid] 
+      //deviceType = DeviceIdentifiers.UUID16[uuid]
+      deviceType = RFParty.lookupUuid16(uuid)
     }
     else if(uuid.length == 32){
       deviceType = DeviceIdentifiers.UUID[uuid] 
@@ -1014,20 +1083,32 @@ export class RFParty extends EventEmitter {
   }
 
   static reverseLookupService(term){
+
+    let possibles = []
+
+    const types = Object.keys(UUID16_TABLES)
+
+    for(let type of types){ 
+      possibles.push( 
+        ...(RFParty.reverseLookupByName(
+            UUID16_TABLES[type], term, '/'+type+'/'
+        ).map( name=>{return '/'+type+'/'+name }) )
+      )
+    }
     
-    return [].concat( 
+    return possibles.concat( 
       RFParty.reverseLookupByName(DeviceIdentifiers.APPLE_Continuity, term),
-      RFParty.reverseLookupByName(DeviceIdentifiers.UUID, term),
-      RFParty.reverseLookupByName(DeviceIdentifiers.UUID16, term)
+      RFParty.reverseLookupByName(DeviceIdentifiers.UUID, term)
     )
   }
 
-  static reverseLookupByName(map, text){
+  static reverseLookupByName(map, text, prefix=''){
     let names = []
     const lowerText = text.toLowerCase()
     for(let code in map){
       const name = map[code]
-      const lowerName = name.toLowerCase()
+      const prefixedName = prefix+name
+      const lowerName = prefixedName.toLowerCase()
 
       if(lowerName.indexOf(lowerText) != -1 ){
         names.push(name)
