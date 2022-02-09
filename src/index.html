@@ -3,6 +3,7 @@
 
     <link rel="stylesheet" href="../node_modules/leaflet/dist/leaflet.css"/>
     <script src="index.js" type="module"></script>
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
 
     <!--<script src="../node_modules/leaflet/dist/leaflet.js"></script>-->
 
@@ -24,8 +25,10 @@
       </div>
 
       <div class='search-bar'>
-        <input id='search-input' class='search-input' type="search" placeholder="search" />
+        <input id='search-input' class='search-input' type="search" placeholder="search" disabled />
       </div>
+      <span id='search-hint' class='search-hint hidden'></span>
+      <span id='search-status' class='search-status hidden'></span>
   
       <div class="status-area">
         <span id='status-text'>Status</span><span id='status-dot' class='green-dot'></span>
@@ -42,21 +45,18 @@
         </div>
       </div>
 
-      <div class='device-info hidden'>
-        <h3 id='device-info-name'>address</h3>
-        <span id='device-info-address'>address</span>
+      <div id="device-info" class='device-info hidden'>
+        <span class="close" onclick="window.MainWindow.hideDiv('device-info')">X</span>
+        <h3 id='device-info-name'>name</h3>
+        <span id='device-info-address'>address</span><br>
         <span id='device-info-company'>company</span>
-        <!--<br>
-        <span id='device-info-company'>company</span>
-
-        <h4>
-          <span id='device-info-product'>product</span>
-          (<span id='device-info-product-code'>code</span>)
-        </h4>-->
 
         <h4>Services</h4>
 
         <span id='device-info-services'></span>
+        <span id='device-info-details' class='device-info-details'>
+          <div id='device-info-detailscontainer'></div>
+        </span>
       </div>
 
       <div id="map" class="content"></div>

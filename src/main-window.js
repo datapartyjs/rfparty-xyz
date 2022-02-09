@@ -3,8 +3,27 @@ const xmljs = require('xml-js')
 
 import { RFParty } from './rfparty'
 import {LoadingProgress} from './loading-progress'
+import { stringify } from 'json5'
+
+const moment = require('moment')
 
 
+const SearchSuggestions = {
+  help: false,
+  address: 'mac',
+  name: true,
+  company: true,
+  product: true,
+  service: ['name','0x...', 'company', 'product'],
+  unknown: false,
+  'unknown-service': false,
+  appleip: 'ip',
+  random: false,
+  public: false,
+  connectable: false,
+  duration: false,
+  error: false
+}
 
 
 export class MainWindow {
@@ -194,7 +213,6 @@ export class MainWindow {
           
           
           resolve(window.rfparty.addGpx(json, file.name))
-
           
         }
         reader.onabort = reject
@@ -209,21 +227,113 @@ export class MainWindow {
 
     const fileContent = await Promise.all(fileLoaders)
 
-    MainWindow.delay(1000)
-
-    await window.rfparty.start()
+    
 
     let searchElem = document.getElementById('search-input')
+    let searchStatusElem = document.getElementById('search-status')
+    let hintElem = document.getElementById('search-hint')
+
+    searchElem.disabled = false
+
+    window.rfparty.on('update-start', ()=>{
+      window.MainWindow.hideDiv('search-hint')
+      searchStatusElem.innerText = 'updating . . .'
+      window.MainWindow.showDiv('search-status')      
+    })
+
+    window.rfparty.on('search-start', ()=>{
+      window.MainWindow.hideDiv('search-hint')
+      searchStatusElem.innerText = 'querying . . .'
+      window.MainWindow.showDiv('search-status')
+    })
+
+    window.rfparty.on('search-finished', (data)=>{
+      window.MainWindow.hideDiv('search-hint')
+      searchStatusElem.innerText = 'rendering ' + data.devices.length + ' devices . . .'
+      window.MainWindow.showDiv('search-status')
+    })
+
+    window.rfparty.on('update-finished', (data)=>{
+      console.log('update complete', data.updateDuration, data)
+      let updateTime = Math.round( (data.updateDuration/1000) * 100) / 100
+      searchStatusElem.innerText = 'found ' + data.devices.length + ' devices in ' + updateTime + ' seconds'
+      window.MainWindow.showDiv('search-status')
+    })
+
+
+    searchElem.addEventListener('input', (event)=>{
+      console.log('input', event)
+
+      
+      const hints = MainWindow.searchSuggestion(event.target.value)
+
+
+      console.log('hint', event.target.value, hints)
+
+      if(hints.length == 0){
+        window.MainWindow.hideDiv('search-hint')
+      }
+      else if(hints.length == 1){
+        window.MainWindow.hideDiv('search-status')
+        window.MainWindow.showDiv('search-hint')
+        hintElem.innerText = hints[0]
+      }
+      else{
+        window.MainWindow.hideDiv('search-status')
+        window.MainWindow.showDiv('search-hint')
+        hintElem.innerText = hints.join('\n')
+      }
+
+    })
 
     searchElem.addEventListener('change', (event)=>{
 
+      
       const input = event.target.value
 
       console.log('search input', input)
 
-      const tokens = input.split(' ')
+      searchStatusElem.innerText = 'searching . . .'
+      window.MainWindow.showDiv('search-status')
 
-      window.rfparty.handleSearch.bind(window.rfparty)(tokens)
+      setTimeout(()=>{
+        window.rfparty.handleSearch.bind(window.rfparty)(input)
+      },10)
+
     })
+
+    MainWindow.delay(1000)
+
+    await window.rfparty.start()
+  }
+
+  static searchSuggestion(input){
+    const terms = input.trim().split(' ')
+    const term = terms[0].trim()
+
+    let suggestions = []
+
+    if(term && terms.length == 1){
+      for(let key in SearchSuggestions){
+        const idx = key.indexOf(term)
+        if(idx > -1 || term == 'help'){
+          let args = SearchSuggestions[key]
+          let suggestion = '• '+ key + ''
+          if(args == true){ suggestion+= ` [${key}]` }
+          else if(typeof args == 'string'){ suggestion+=` [${args}]` }
+          else if(Array.isArray(args)){ suggestion+= ' ['+args.join(' | ')+']' }
+
+          suggestions.push(suggestion)
+
+          /*if(idx == 0){
+            return input + suggestion.replace(term, '') 
+          }
+
+          return input + suggestion*/
+        }
+      }
+    }
+
+    return suggestions
   }
 }

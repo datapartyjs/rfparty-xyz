@@ -3,12 +3,17 @@
 
 //const Debug = require('debug')('rfparty')
 const Leaflet = require('leaflet')
+const JSON5 = require('json5')
 const Pkg = require('../package.json')
 const JSONPath = require('jsonpath-plus').JSONPath
 const reach = require('./reach')
 const Loki = require('lokijs')
 const moment = require('moment')
+const EventEmitter = require('last-eventemitter')
+
 const DeviceIdentifiers = require('./device-identifiers')
+
+const JSONViewer = require('json-viewer-js')
 
 const TILE_SERVER_DEFAULT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const TILE_SERVER_DARK = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
@@ -62,8 +67,9 @@ async function delay(ms=100){
  */
 
 
-export class RFParty {
+export class RFParty extends EventEmitter {
   constructor(divId) {
+    super()
 
     this.showAllTracks = false
     this.showAwayTracks = false
@@ -98,7 +104,7 @@ export class RFParty {
 
     this.db.addCollection('ble', {
       indices: ['firstseen', 'lastseen', 'address', 'duration', 'advertisement.localName',
-        'connectable', 'addressType', 'services', 'hasUnknownService',
+        'connectable', 'addressType', 'services', 'hasUnknownService', 'ibeacon.uuid', 'findmy.maintained',
         'company', 'product', 'companyCode', 'productCode', 'appleContinuityTypeCode', 'appleIp']
     })
 
@@ -120,6 +126,9 @@ export class RFParty {
 
   async start() {
     console.log('starting')
+
+    this.emit('search-start')
+    let searchStartTime = new moment()
 
     let awayTime = this.db.getCollection('awayTime').find()
 
@@ -152,110 +161,208 @@ export class RFParty {
       devices = devices.concat(bleDevices)
 
     }
+
+    let searchEndTime = new moment()
+    let searchDuration = searchEndTime.diff(searchStartTime)
     
-    this.renderBleDeviceList(devices)
-    //refine ble & wifi observations
-    //    compute firstSeen & lastSeen
+    this.emit('search-finished', {devices, searchDuration})
 
+
+    let renderStartTime = new moment()
+    this.emit('render-start')
+    
+    await this.renderBleDeviceList(devices)
+
+    let renderEndTime = new moment()
+    let renderDuration = renderEndTime.diff(renderStartTime)
+
+
+    this.emit('render-finished', {devices, renderDuration})
+
+    let updateEndTime = new moment()
+    let updateDuration = updateEndTime.diff(searchStartTime)
+    this.emit('update-finished', {devices, updateDuration, searchDuration, renderDuration})
 
   }
 
-  handleSearch(tokens){
-    let devices = null
-    let term = tokens.slice(1).join(' ')
-    switch(tokens[0]){
-      case 'name':
-      case 'localname':
-        console.log('select by name', tokens)
-        devices = this.db.getCollection('ble').find({
-          'advertisement.localName':  {'$contains':  term }
-        })
+  async handleSearch(input){
+    let query = null
+    let updateStartTime = new moment()
 
-        console.log('term['+term+']')
+    if(input[0]=='{'){
+      console.log('raw query')
+      const obj = JSON5.parse(input)
 
+      console.log('parsed query', obj)
+      query = obj
+    }else{
+      const tokens = input.split(' ')
 
-
-        break
-      case 'company':
-        console.log('select by company', tokens)
-        devices = this.db.getCollection('ble').find({
-          'company':  {'$contains':  term }
-        })
-        break
-
-      case 'product':
-        console.log('select by product', tokens)
-        
-        devices = this.db.getCollection('ble').find({
-          'product':  {'$contains':  term }
-        })
-        break
-
-      case 'unknown-service':
-        devices = this.db.getCollection('ble').find({
-          'hasUnknownService':  {'$exists': true }
-        })
-        break
-      case 'service':
-        console.log('select by service', tokens)
-        let possibleServices = RFParty.reverseLookupService(term)
-        console.log('possible', possibleServices)
-        devices = this.db.getCollection('ble').find({
-          'services':  {'$containsAny':  possibleServices }
-        })
-        break
-
-      case 'appleIp':
-        console.log('select by appleIp', tokens)
-        if(tokens.length < 2){
-          devices = this.db.getCollection('ble').find({
-            'appleIp':  {'$exists': true }
-          })
-        }
-        else{
-          devices = this.db.getCollection('ble').find({
-            'appleIp':  {'$contains':  term }
-          })
-        }
-        break
-
-      case 'random':
-        devices = this.db.getCollection('ble').find({
-          'addressType':  {'$eq':  'random' }
-        })
-        break
-      case 'public':
-        devices = this.db.getCollection('ble').find({
-          'addressType':  {'$eq':  'public' }
-        })
-        break
-      case 'connectable':
-        devices = this.db.getCollection('ble').find({
-          'connectable':  {'$eq':  true }
-        })
-        break
-      case 'duration':
-        devices = this.db.getCollection('ble').find({
-          duration: {
-            $gt: 30*60000
+      let term = tokens.slice(1).join(' ')
+      switch(tokens[0]){
+        case 'mac':
+        case 'address':
+          query = { 'address':  {'$contains':  term } }
+          break
+        case 'name':
+        case 'localname':
+          console.log('select by name', tokens)
+          query = {
+            'advertisement.localName':  {'$contains':  term }
           }
-        })
-        break
+  
+          console.log('term['+term+']')
+  
+          break
+        case 'company':
+          console.log('select by company', tokens)
+          query = {
+            'company':  {'$contains':  term }
+          }
+          break
+  
+        case 'product':
+          console.log('select by product', tokens)
+          
+          query = {
+            'product':  {'$contains':  term }
+          }
+          break
+  
+        case 'unknown':
+        case 'unknown-service':
+          query = {
+            'hasUnknownService':  {'$exists': true }
+          }
+          break
+        case 'service':
+          const serviceTerm = tokens[1]
+          console.log('select by service', serviceTerm)
+          let possibleServices = RFParty.reverseLookupService(serviceTerm)
+          console.log('possible', possibleServices)
+          query = {
+            'services':  {'$containsAny':  possibleServices },
+            ...this.parseServiceSearch(serviceTerm.toLowerCase(), tokens.slice(2))
+          }
+          break
+  
+        case 'appleip':
+        case 'appleIp':
+          console.log('select by appleIp', tokens)
+          if(tokens.length < 2){
+            query = {
+              'appleIp':  {'$exists': true }
+            }
+          }
+          else{
+            query = {
+              'appleIp':  {'$contains':  term }
+            }
+          }
+          break
+  
+        case 'random':
+          query = {
+            'addressType':  {'$eq':  'random' }
+          }
+          break
+        case 'public':
+          query = {
+            'addressType':  {'$eq':  'public' }
+          }
+          break
+        case 'connectable':
+          query = {
+            'connectable':  {'$eq':  true }
+          }
+          break
+        case 'duration':
+          query = {
+            duration: {
+              $gt: 30*60000
+            }
+          }
+          break
 
-      default:
-        console.log('unknown select type', tokens[0])
-        break
+        case 'error':
+          query = {'protocolError': {'$exists': true}}
+          break
+  
+        default:
+          console.log('unknown select type', tokens[0])
+          break
+      }
     }
 
-    console.log(devices)
+    if(!query){ 
+      let updateEndTime = new moment()
+      let updateDuration = updateEndTime.diff(updateStartTime)
+      this.emit('update-complete', {query, updateDuration})
 
+      return
+    }
+
+
+    console.log('running query...', query)
+
+    this.emit('search-start', {query})
+
+    let searchStartTime = new moment()
+
+    const devices = this.db.getCollection('ble').chain().find(query).data()
+    
+    let searchEndTime = new moment()
+    let searchDuration = searchEndTime.diff(searchStartTime)
+    
+    this.emit('search-finished', {query, devices, searchDuration})
+
+
+    let durations = {searchDuration}
+
+    //console.log('rendering devices...', devices)
     if(devices != null){
-      this.renderBleDeviceList(devices)
+
+      this.emit('render-start')
+      let renderStartTime = new moment()
+
+      await delay(30)
+      
+      await this.renderBleDeviceList(devices)
+      
+      let renderEndTime = new moment()
+      let renderDuration = renderEndTime.diff(renderStartTime)
+
+      durations.renderDuration = renderDuration
+
+
+      this.emit('render-finished', {query, devices, renderDuration})
     }
+
+    let updateEndTime = new moment()
+    let updateDuration = updateEndTime.diff(updateStartTime)
+    this.emit('update-finished', {query, devices, updateDuration, ...durations})
   }
 
+  parseServiceSearch(service, terms){
+    let query = {}
+    
+    if(terms.length==0){ return }
 
-  renderBleDeviceList(bleDevices){
+    switch(service){
+      case 'ibeacon':
+        query = { 'ibeacon.uuid': { $contains: terms[0] } }
+        break
+      case 'findmy':
+        query = { 'findmy.maintained': { $eq: terms[0] == 'found'}}
+        break
+      default:
+        break
+    }
+
+    return query
+  }
+
+  async renderBleDeviceList(bleDevices){
     console.log('\trendering', bleDevices.length, 'ble devices')
 
     if(this.searchResults != null){
@@ -265,9 +372,13 @@ export class RFParty {
 
     let layer = Leaflet.layerGroup()
 
+    let count = 0
     for (let dev of bleDevices) {
 
       //if(dev.duration < 30*60000){ continue }
+
+      count++
+      if((count % 500) == 0){ await delay(1) }
 
       let pt = this.getTrackPointByTime(dev.lastseen)
 
@@ -323,15 +434,16 @@ export class RFParty {
   updateDeviceInfoHud(){
     let devices = Object.keys( this.deviceLayers )
     if(devices.length == 0){
-      let deviceInfo = document.getElementsByClassName('device-info')
-      deviceInfo.classList.add('hidden')
+      window.MainWindow.hideDiv('device-info')
+      /*let deviceInfo = document.getElementById('device-info')
+      deviceInfo.classList.add('hidden')*/
     } else {
       
       
 
       let device = this.getBLEDevice(devices[0])
 
-      console.log(device)
+      console.log('updateDeviceInfoHud', device)
 
 
       //document.getElementById('device-info-mac').textContent = reach(device, 'address')
@@ -341,7 +453,11 @@ export class RFParty {
       let companyText = ''
 
       if(reach(device, 'company')){
-        companyText=reach(device, 'company') + '(' + reach(device, 'companyCode') + ')'
+        if(!reach(device,'companyCode')){
+          companyText=reach(device, 'company') 
+        } else {
+          companyText=reach(device, 'company') + '(' + reach(device, 'companyCode') + ')'
+        }
       }
       else if(reach(device, 'companyCode')){
         companyText='Unknown Company' + '(0x' + reach(device, 'companyCode') + ')'
@@ -400,10 +516,24 @@ export class RFParty {
 
       document.getElementById('device-info-services').textContent = serviceText
 
+
+
+      let details = document.getElementById('device-info-detailscontainer')
+
+      while (details.firstChild) { details.removeChild(details.firstChild) }
+
+      let detailsViewer = new JSONViewer({
+        container: details,
+        data: JSON.stringify(device),
+        theme: 'dark',
+        expand: false
+      })
+      //
+
       //! @todo
 
-      let deviceInfo = document.getElementsByClassName('device-info')[0]
-      deviceInfo.classList.remove('hidden')
+      window.MainWindow.showDiv('device-info')
+      
     }
   }
 
@@ -423,18 +553,41 @@ export class RFParty {
 
       let devicePathLL = []
 
+      
+
       for(let observation of device.seen){
         let pt = this.getTrackPointByTime(observation.timestamp)
+
+
 
         if(pt){ 
           devicePathLL.push([ pt.lat, pt.lon ])
           let circle = Leaflet.circle([pt.lat, pt.lon], { color: 'green', radius: 8, fill:true, weight:1, opacity: 0.9 })
+
+          circle.on('click', (event)=>{
+            this.handleClick({
+              event,
+              type: 'ble', 
+              value: device.address,
+              timestamp: observation.timestamp
+            })
+          })
+
           layer.addLayer(circle)
         }
       }
 
       if(devicePathLL.length > 0){
         let line = Leaflet.polyline(devicePathLL, { color: 'green', opacity: 0.9, weight: '4' })
+
+        line.on('click', (event)=>{
+          this.handleClick({
+            event,
+            type: 'ble', 
+            value: device.address,
+            timestamp: device.lastseen
+          })
+        })
         layer.addLayer(line)
       }
 
@@ -595,7 +748,7 @@ export class RFParty {
     for (let device of scanDbBle.chain().find().data({ removeMeta: true })) {
       let start = device.seen[0].timestamp
       let end = device.seen[device.seen.length - 1].timestamp
-      
+
       window.loadingState.completePart('index '+name)
       count++
       if(count%500 == 0){
@@ -626,6 +779,7 @@ export class RFParty {
         }
         else if(found && found.indexOf('Product') != -1){
           doc.product = found
+          doc.services.push(found)
         }
         else if(found && found.indexOf('Service') != -1){
           doc.services.push(found)
@@ -642,26 +796,39 @@ export class RFParty {
       }*/
 
       if(device.advertisement.manufacturerData ){
+
+        
     
-    
-        let dataLen = device.advertisement.manufacturerData.data.length
-        let dataArr = Uint8Array.from(device.advertisement.manufacturerData.data)
-        let manufacturerData = new Buffer( dataArr.buffer )
+        const manufacturerData = Buffer.from(device.advertisement.manufacturerData)
         const companyCode = manufacturerData.slice(0, 2).toString('hex').match(/.{2}/g).reverse().join('')
 
         doc.companyCode = companyCode
         doc.company = RFParty.lookupDeviceCompany(companyCode)
     
+        // Parse Apple Continuity Messages 
         if(companyCode == '004c'){
-          const cm = manufacturerData.slice(2, 3).toString('hex')
-          doc.appleContinuityTypeCode = cm
 
-          let appleService = RFParty.lookupAppleService(cm)
+          const subType = manufacturerData.slice(2, 3).toString('hex')
+          const subTypeLen = manufacturerData[3]
+          doc.appleContinuityTypeCode = subType
+
+          if( subTypeLen + 4 >  manufacturerData.length){
+            //console.error(device + originalJSON)
+            doc.protocolError = {
+              appleContinuity: 'incorrect message length[' + subTypeLen +'] when ' + (manufacturerData.length-4) + ' (or less) was expected'
+            }
+
+            console.warn(doc.address + ' - ' + doc.protocolError.appleContinuity)
+            //throw new Error('corrupt continuity message???')
+          }
+
+          let appleService = RFParty.lookupAppleService(subType)
           if(appleService){
             doc.services.push( appleService )
           }
     
-          if(cm =='09'){
+          if(subType =='09'){
+            // Parse AirPlayTarget messages
     
             const devIP = manufacturerData.slice( manufacturerData.length-4, manufacturerData.length )
     
@@ -672,9 +839,62 @@ export class RFParty {
     
               doc.appleIp = appleIp
           }
+          else if(subType == '02'){
+            // Parse iBeacon messages
+
+            if(subTypeLen != 21){
+              doc.protocolError = {
+                ibeacon: 'incorrect message length[' + subTypeLen +'] when 21 bytes was expected'
+              }
+              console.warn(doc.address + ' - ' + doc.protocolError.ibeacon)
+            }
+            else{
+              doc.ibeacon = {
+                uuid: manufacturerData.slice(4, 19).toString('hex'),
+                major: manufacturerData.slice(20, 21).toString('hex'),
+                minor: manufacturerData.slice(22, 23).toString('hex'),
+                txPower: manufacturerData.readInt8(24)
+              }
+            }
+          }
+          else if(subType == '12'){
+            // Parse FindMy messages
+
+            const status = manufacturerData[4]
+            const maintained =  (0x1 & (status >> 2)) == 1 ? true : false
+
+            doc.findmy = { maintained }
+          }
+          else if(subType == '10'){
+            // Parse NearbyInfo messages
+            const flags = manufacturerData[4] >> 4
+            const actionCode = manufacturerData[4] & 0x0f
+            const status = manufacturerData[5]
+            doc.nearbyinfo = {
+              flags: {
+                unknownFlag1: Boolean((flags & 0x2) > 0),
+                unknownFlag2: Boolean((flags & 0x8) > 0),
+                primaryDevice: Boolean((flags & 0x1) > 0),
+                airdropRxEnabled: Boolean((flags & 0x4) > 0),
+                airpodsConnectedScreenOn: Boolean((status & 0x1) > 0),
+                authTag4Bytes: Boolean((status & 0x02) > 0),
+                wifiOn: Boolean((status & 0x4) > 0),
+                hasAuthTag: Boolean((status & 0x10) > 0),
+                watchLocked: Boolean((status & 0x20) > 0),
+                watchAutoLock: Boolean((status & 0x40) > 0),
+                autoLock: Boolean((status & 0x80) > 0)
+              },
+              actionCode,
+              action: DeviceIdentifiers.NearbyInfoActionCode[actionCode]
+            }
+          } else if (subType == '0f'){
+            // Parse NearbyAction messages
+            const flags = manufacturerData[4]
+            const action = manufacturerData[5]
+            doc.nearbyaction = { type: DeviceIdentifiers.NearbyActionType[action] }
+          }
     
     
-          //console.log('cm', cm )
         }
       }
 
@@ -697,6 +917,8 @@ export class RFParty {
     
     await delay(200)
     
+
+    //! @todo support a flag for whether sources should be kept after importing
 
     //this.scanDb = scanDb
   }
@@ -773,6 +995,7 @@ export class RFParty {
     return  DeviceIdentifiers.COMPANY_IDENTIFIERS[code] 
   }
   
+
   static lookupAppleService(code){
     return DeviceIdentifiers.APPLE_Continuity[code]
   }
@@ -801,10 +1024,12 @@ export class RFParty {
 
   static reverseLookupByName(map, text){
     let names = []
+    const lowerText = text.toLowerCase()
     for(let code in map){
       const name = map[code]
+      const lowerName = name.toLowerCase()
 
-      if(name.indexOf(text) != -1 ){
+      if(lowerName.indexOf(lowerText) != -1 ){
         names.push(name)
       }
     }
