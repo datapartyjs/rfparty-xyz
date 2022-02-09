@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel src/index.html",
-    "build": "parcel build"
+    "build": "parcel build --no-scope-hoist"
   },
   "dependencies": {
     "@abandonware/noble": "^1.9.2-15",

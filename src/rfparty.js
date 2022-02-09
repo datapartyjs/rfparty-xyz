@@ -74,6 +74,8 @@ export class RFParty extends EventEmitter {
     this.showAllTracks = false
     this.showAwayTracks = false
 
+    this.detailsViewer = null
+
     this.map = Leaflet.map(divId,{
       attributionControl: false
     }).setView([47.6, -122.35], 13)
@@ -522,7 +524,7 @@ export class RFParty extends EventEmitter {
 
       while (details.firstChild) { details.removeChild(details.firstChild) }
 
-      let detailsViewer = new JSONViewer({
+      this.detailsViewer = new JSONViewer({
         container: details,
         data: JSON.stringify(device),
         theme: 'dark',

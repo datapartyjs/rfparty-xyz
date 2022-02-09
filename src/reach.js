@@ -1,4 +1,4 @@
-module.exports = function(obj, path, defaultVal=null){
+module.exports = function(obj, path, defaultVal=undefined){
   var tokens = path.split('.')
   var val = obj;
 
