@@ -249,14 +249,14 @@ export class MainWindow {
 
     window.rfparty.on('search-finished', (data)=>{
       window.MainWindow.hideDiv('search-hint')
-      searchStatusElem.innerText = 'rendering ' + data.devices.length + ' devices . . .'
+      searchStatusElem.innerText = 'rendering ' + data.render.count + ' devices . . .'
       window.MainWindow.showDiv('search-status')
     })
 
     window.rfparty.on('update-finished', (data)=>{
       console.log('update complete', data.updateDuration, data)
       let updateTime = Math.round( (data.updateDuration/1000) * 100) / 100
-      searchStatusElem.innerText = 'found ' + data.devices.length + ' devices in ' + updateTime + ' seconds'
+      searchStatusElem.innerText = 'showing ' +data.render.onscreen +' out of ' + data.render.count + ' results in ' + updateTime + ' seconds'
       window.MainWindow.showDiv('search-status')
     })
 
