@@ -11,6 +11,7 @@
   "dependencies": {
     "@abandonware/noble": "^1.9.2-15",
     "debug": "^4.3.3",
+    "json-viewer-js": "^1.0.7",
     "json5": "^2.2.0",
     "jsonpath-plus": "^6.0.1",
     "last-eventemitter": "^1.1.1",

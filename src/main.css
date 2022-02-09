@@ -52,7 +52,8 @@ body{
   font-size: 14px;
   color: rgb(187, 206, 187);
   left: 5vw;
-  top:30vh;
+  right: 5vw;
+  top:25vh;
 
   background-color: rgba(0, 0, 0, 0.763);
   color: white;
@@ -62,6 +63,24 @@ body{
   display:flex;
   flex-direction: column;
   align-items: left;
+
+  word-wrap: break-word;
+  overflow: auto;
+
+}
+
+.device-info-details {
+  display: block;
+  overflow-y:auto;
+  overflow-x:auto;
+  margin-top: 20px;
+  border: white;
+  border-width: 2px;
+  border-style: dotted;
+
+  font-size: 14px;
+
+  max-height: 45vh;
 }
 
 .search-bar {
@@ -71,25 +90,73 @@ body{
   display: flex;
   align-items: stretch;
 
-  left: 60px;
-  top:60px;
 
+  left: 60px;
+  top:40px;
 }
 
 .search-input {
   font-size: 24px;
-  width: 35vw;
   height: 1em;
+  max-width: calc(100vw - 120px);
   padding: 20px;
   color: black;
   font-family: 'Roboto';
   font-weight: 100;
-  color: rgb(0, 0, 0);
-  border-color: #e6e5e8;
-  border-style: dashed;
-  border-width: 1px;
+  border-style: none;
+  border-width: 0px;
   background-color: white;
+  opacity: 0.65;
 }
+
+.search-input:hover,
+.search-input:focus {
+  opacity: 0.9;
+}
+
+.search-status {
+  font-size: 12px;
+  z-index: 2;
+  display: block;
+  position: fixed;
+  top: 90px;
+  
+  opacity: 0.75;
+
+  justify-content:left;
+  color: white;
+  left: 60px;
+}
+
+.search-hint {
+  z-index: 2;
+  display: block;
+  position: fixed;
+  font-size: 24px;
+  top: 120px;
+  
+  opacity: 0.75;
+
+  justify-content:left;
+  
+  left: 60px;
+
+  max-width: 80vw;
+  max-height: 40vh;
+  overflow: auto;
+  color: white;
+  font-family: 'Roboto';
+  font-weight: 100;
+  border-width: 0px;
+  border-style: none;
+
+
+  background-color: black;
+  padding: 10px;
+}
+
+
+
 
 .loading-bar {
 
@@ -108,8 +175,8 @@ body{
   font-weight: 200;
   font-size: 24px;
   padding: 0px;
-  margin-top: 80;
-  margin-bottom: 20;
+  margin-top: 80px;
+  margin-bottom: 20px;
   display:flex;
   flex-direction: column;
   align-items: center;
@@ -144,8 +211,25 @@ progress { color: white; }
   border-width: 1px;
   font-family: Roboto;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 10px;
 }
+
+
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+
+*::-webkit-scrollbar-thumb {
+background-color: darkgrey;
+outline: 1px solid slategrey;
+}
+
 
 textarea::-webkit-scrollbar {
   width: 1em;
@@ -246,7 +330,11 @@ outline: 1px solid slategrey;
     line-height: 40px; /* same as height! */
   }
 
-  .footer {
+  .device-info {
+    right: auto;
+  }
+
+  .footer-left {
     height: 20px;
     left: 5px;
     bottom: 2px;
@@ -266,6 +354,19 @@ outline: 1px solid slategrey;
     height: calc(100vh - 40px);
   }
 
+  .search-bar {
+    top: 60px;
+  }
+
+  .search-input{
+    width: 35vw;
+  }
+
+  .search-status {
+    top: calc(1em + 60px + 36px);
+    left: 60px;
+  }
+
   .status-area {
     top:12px;
     right: 15px;
@@ -278,6 +379,12 @@ outline: 1px solid slategrey;
     width: 18px;
   }
 
+
+
+  .loading-details {
+    font-weight: 100;
+    font-size: 14px;
+  }
 
 }
 
@@ -314,15 +421,23 @@ outline: 1px solid slategrey;
   /* The Close Button */
   .close {
     color: white;
-    float: right;
-    font-size: 28px;
     font-weight: bold;
+    position: absolute;
+    float: right;
+    right: 5px;
+    top: 0px;
+    opacity: 0.6;
+
+    font-family: Roboto, sans-serif;
+    font-weight: 100;
+    font-size: 24px;
   }
   
   .close:hover,
   .close:focus {
-    color: #000;
-    text-decoration: none;
+    color: white;
+    opacity: 0.8;
+    font-weight: 400;
     cursor: pointer;
   }
   
@@ -394,7 +509,7 @@ outline: 1px solid slategrey;
   position: absolute;
   left: 0;
   right:0;
-  top: 5vw;
+  top: 8vh;
   bottom: 0;
   
   display:flex;
