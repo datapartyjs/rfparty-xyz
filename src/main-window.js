@@ -211,8 +211,7 @@ export class MainWindow {
           window.loadingState.completeStep('read '+file.name)
 
           
-          
-          resolve(window.rfparty.addGpx(json, file.name))
+          window.rfparty.addGpx.bind(window.rfparty)(json, file.name).then(resolve).catch(reject)
           
         }
         reader.onabort = reject
@@ -225,7 +224,7 @@ export class MainWindow {
     }
 
 
-    const fileContent = await Promise.all(fileLoaders)
+   await Promise.all(fileLoaders)
 
     
 

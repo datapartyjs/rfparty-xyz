@@ -75,7 +75,7 @@ export class RFParty extends EventEmitter {
   constructor(divId) {
     super()
 
-    this.showAllTracks = false
+    this.showAllTracks = true
     this.showAwayTracks = false
 
     this.detailsViewer = null
@@ -128,12 +128,24 @@ export class RFParty extends EventEmitter {
     this.lastQuery = null
 
     this.scanDb = null
-    //this.gpx = {}
+    this.gpx = {}
     this.gpxLines = {}
+    this.gpxLayer = Leaflet.layerGroup()
+    
+
   }
 
   async start() {
     console.log('starting')
+    
+    if(this.showAllTracks){
+    
+      for(let name in this.gpxLines){ 
+        this.gpxLayer.addLayer(this.gpxLines[name])
+      }
+    
+    	this.gpxLayer.addTo(this.map)
+    }
 
     this.emit('search-start')
     let searchStartTime = new moment()
@@ -660,7 +672,7 @@ export class RFParty extends EventEmitter {
   getTrackPointByTime(timestamp) {
     let bestDeltaMs = null
     let bestPoint = null
-    let track = this.getTrackByTime(timestamp - 60000, timestamp + 6000)
+    let track = this.getTrackByTime(timestamp - 1200000, timestamp + 6000)
 
     for (let point of track) {
       let deltaMs = Math.abs(moment(point.timestamp).diff(track.timestamp))
@@ -670,6 +682,7 @@ export class RFParty extends EventEmitter {
         bestPoint = point
       }
     }
+
 
     return bestPoint
   }
@@ -986,11 +999,18 @@ export class RFParty extends EventEmitter {
 
     //this.gpx[name]=obj
 
-    const trackPoints = JSONPath({ json: obj, path: '$..trkpt' })[0]
+    const trackPoints = JSONPath({ json: obj, path: '$..trkpt', flatten: true })
+    
+    if(!trackPoints){
+       window.loadingState.startStep('index '+name, 1)
+       window.loadingState.completeStep('index '+name)
+       console.log('added gpx', name, 'with', undefined, 'points')
+       return
+    }
     
     window.loadingState.startStep('index '+name, trackPoints.length)
 
-    const latlngs = []
+    let latlngs = []
 
     let count = 0
     for (let point of trackPoints) {
@@ -1032,12 +1052,17 @@ export class RFParty extends EventEmitter {
     //console.log('loaded gpx', name)
 
     if(this.showAllTracks){
-      /*this.gpxLines[name] =*/ Leaflet.polyline(latlngs, { color: 'white', opacity: 0.4, weight: '2' }).addTo(this.map)
+      this.gpxLines[name] = Leaflet.polyline(latlngs, { color: 'red', opacity: 0.4, weight: '2' })
+      
+      //this.gpxLines[name].addLayer(this.gpxLayer)
+      //this.gpxLayer.addLayer(this.gpxLines[name])
     }
 
     
     window.loadingState.completeStep('index '+name)
-    //console.log('added gpx', name, 'with', trackPoints.length, 'points')
+    console.log('added gpx', name, 'with', trackPoints.length, 'points')
+    //console.log('latlong', latlngs)
+    //console.log('tracks', trackPoints)
   }
 
   static get Version() {
