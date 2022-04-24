@@ -1,6 +1,6 @@
 {
   "name": "rfparty-app",
-  "productName": "electron-app",
+  "productName": "rfparty-app",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": "src/index.js",
@@ -19,7 +19,9 @@
   "license": "MIT",
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "executableName": "rfparty-app"
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
@@ -31,7 +33,7 @@
           "name": "@electron-forge/maker-deb",
           "config": {
           	"options": {
-          		"name": "rfparty",
+			"name":"rfparty",
           		"maintainer": "Dataparty",
           		"homepage": "https://dataparty.xyz"
           	}
