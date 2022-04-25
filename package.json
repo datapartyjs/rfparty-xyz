@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@abandonware/noble": "^1.9.2-15",
+
     "csv": "^6.0.5",
     "debug": "^4.3.3",
     "electron-squirrel-startup": "^1.0.0",
@@ -41,6 +42,7 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@davidwinter/electron-forge-maker-snap": "^2.0.7",
     "@electron-forge/cli": "^6.0.0-beta.63",
     "@electron-forge/maker-deb": "^6.0.0-beta.63",
     "@electron-forge/maker-rpm": "^6.0.0-beta.63",
@@ -58,13 +60,15 @@
   "config": {
     "forge": {
       "packagerConfig": {
+        "icon":"images/rfparty.png",
         "executableName": "rfparty"
       },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "rfparty"
+            "name": "rfparty",
+            "loadingGif": "images/dataparty-loading.gif"
           }
         },
         {
@@ -78,12 +82,12 @@
           }
         },
         {
-          "name": "@electron-forge/maker-snap",
+          "name": "@davidwinter/electron-forge-maker-snap",
           "config": {
             "features": {
               "webgl": true
             },
-            "summary": "Pretty Awesome"
+            "summary": "like a tricorder, for your wireless world."
           }
         }
       ]
