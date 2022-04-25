@@ -1,22 +1,38 @@
 {
   "name": "rfparty",
+  "productName": "rfparty",
   "version": "0.1.4",
-  "description": "",
+  "description": "wireless situational awareness and debugging. its like a tricorder, for your wireless world.",
   "source": "src/index.html",
+  "main": "./index.js",
+  "targets": {
+    "main": false
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel src/index.html",
-    "build": "parcel build --no-scope-hoist"
+    "build": "parcel build --no-scope-hoist --public-url ./ src/index.html",
+    "electron-start": "electron-forge start",
+    "electron-package": "electron-forge package",
+    "electron-make": "electron-forge make",
+    "electron-publish": "electron-forge publish"
+  },
+  "author": {
+    "name": "Dataparty",
+    "email": "code@dataparty.xyz"
   },
   "dependencies": {
     "@abandonware/noble": "^1.9.2-15",
+
     "csv": "^6.0.5",
     "debug": "^4.3.3",
+    "electron-squirrel-startup": "^1.0.0",
     "json-viewer-js": "^1.0.7",
     "json5": "^2.2.0",
     "jsonpath-plus": "^6.0.1",
     "last-eventemitter": "^1.1.1",
     "leaflet": "1.7.1",
+    "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
     "moment": "^2.17.1",
     "moment-timezone": "^0.5.11",
@@ -24,14 +40,57 @@
     "pcap": "^3.1.0",
     "xml-js": "^1.6.11"
   },
-  "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@davidwinter/electron-forge-maker-snap": "^2.0.7",
+    "@electron-forge/cli": "^6.0.0-beta.63",
+    "@electron-forge/maker-deb": "^6.0.0-beta.63",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.63",
+    "@electron-forge/maker-snap": "^6.0.0-beta.63",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
+    "@electron-forge/maker-zip": "^6.0.0-beta.63",
     "buffer": "^6.0.3",
+    "electron": "18.1.0",
     "events": "^3.3.0",
     "http-server": "^14.1.0",
     "parcel": "^2.2.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "icon":"images/rfparty.png",
+        "executableName": "rfparty"
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "rfparty",
+            "loadingGif": "images/dataparty-loading.gif"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {
+            "options": {
+              "name": "rfparty",
+              "maintainer": "Dataparty",
+              "homepage": "https://dataparty.xyz"
+            }
+          }
+        },
+        {
+          "name": "@davidwinter/electron-forge-maker-snap",
+          "config": {
+            "features": {
+              "webgl": true
+            },
+            "summary": "like a tricorder, for your wireless world."
+          }
+        }
+      ]
+    }
   }
 }
