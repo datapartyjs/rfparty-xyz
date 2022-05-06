@@ -12,9 +12,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel src/index.html",
     "build": "parcel build --no-scope-hoist --public-url ./ src/index.html",
-    "electron-start": "electron-forge start",
-    "electron-package": "electron-forge package",
-    "electron-make": "electron-forge make",
+    "electron-start": "npm run build; electron-forge start",
+    "electron-package": "npm run build; electron-forge package",
+    "electron-make": "npm run build; electron-forge make",
     "electron-publish": "electron-forge publish"
   },
   "author": {

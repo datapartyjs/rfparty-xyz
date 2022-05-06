@@ -301,10 +301,21 @@ export class RFParty extends EventEmitter {
           }
           break
         case 'duration':
-          query = {
-            duration: {
-              $gt: 30*60000
+          if(tokens.length < 2){
+            query = {
+              duration: {
+                $gt: 30*60000
+              }
             }
+
+          } else {
+
+            query = {
+              duration: {
+                $gt: moment.duration("PT" + term).as('ms')
+              }
+            }
+
           }
           break
 
@@ -313,15 +324,16 @@ export class RFParty extends EventEmitter {
           break
   
         default:
-          console.log('unknown select type', tokens[0])
-          break
+          console.log('invalid search type', tokens[0])
+          this.emit('search-failed')
+          return
       }
     }
 
     if(!query){ 
       let updateEndTime = new moment()
       let updateDuration = updateEndTime.diff(updateStartTime)
-      this.emit('update-complete', {query, updateDuration})
+      this.emit('update-finished', {query: this.lastQuery, updateDuration, render: this.lastRender})
 
       return
     }
@@ -438,6 +450,7 @@ export class RFParty extends EventEmitter {
           this.handleClick({
             event,
             type: 'ble', 
+            id: dev.$loki,
             value: dev.address,
             timestamp: dev.lastseen
           })
@@ -463,6 +476,7 @@ export class RFParty extends EventEmitter {
             this.handleClick({
               event,
               type: 'ble', 
+              id: dev.$loki,
               value: dev.address,
               timestamp: dev.firstseen
             })
@@ -597,7 +611,7 @@ export class RFParty extends EventEmitter {
   }
 
 
-  handleClick({type, value, timestamp, event}){
+  handleClick({id, type, value, timestamp, event}){
     console.log('clicked type=', type, value, timestamp, event)
 
     if(type == 'ble'){
@@ -608,7 +622,8 @@ export class RFParty extends EventEmitter {
 
       let layer = Leaflet.layerGroup()
 
-      let device = this.getBLEDevice(value)
+      //let device = this.getBLEDevice(value)
+      let device = this.db.getCollection('ble').findOne({'$loki':id})
 
       let devicePathLL = []
 
@@ -627,6 +642,7 @@ export class RFParty extends EventEmitter {
             this.handleClick({
               event,
               type: 'ble', 
+              id: device.$loki,
               value: device.address,
               timestamp: observation.timestamp
             })
@@ -643,6 +659,7 @@ export class RFParty extends EventEmitter {
           this.handleClick({
             event,
             type: 'ble', 
+            id: device.$loki,
             value: device.address,
             timestamp: device.lastseen
           })
@@ -761,7 +778,7 @@ export class RFParty extends EventEmitter {
       window.loadingState.completePart('index '+name)
 
       count++
-      if(count%3000 == 0){
+      if(count%1000 == 0){
         await delay(10)
       }
 
@@ -806,12 +823,15 @@ export class RFParty extends EventEmitter {
     console.log('importing ble . . .')
     
     for (let device of scanDbBle.chain().find().data({ removeMeta: true })) {
+
+
+
       let start = device.seen[0].timestamp
       let end = device.seen[device.seen.length - 1].timestamp
 
       window.loadingState.completePart('index '+name)
       count++
-      if(count%500 == 0){
+      if(count%300 == 0){
         await delay(10)
       }
 
@@ -974,7 +994,7 @@ export class RFParty extends EventEmitter {
       window.loadingState.completePart('index '+name)
 
       count++
-      if(count%500 == 0){
+      if(count%300 == 0){
         await delay(1)
       }
     }
