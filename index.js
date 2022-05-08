@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, Menu, Tray, nativeImage } = require('electron');
 const path = require('path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -22,6 +22,19 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.closeDevTools();
+
+  let icon = nativeImage.createFromPath('./images/rfparty-white-256.png').resize({width:32, height:32})
+
+  const tray = new Tray(icon)
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'Monitor', type: 'checkbox', checked: true, click: ()=>{console.log('clicked-radio')} },
+    { type: 'separator' },
+    { role: 'Quit' },
+  ])
+
+  tray.setToolTip('rfparty')
+  tray.setContextMenu(contextMenu)
+
 };
 
 // This method will be called when Electron has finished
@@ -34,7 +47,7 @@ app.on('ready', createWindow);
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit();
+    //app.quit();
   }
 });
 
