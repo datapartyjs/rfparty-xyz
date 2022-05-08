@@ -60,7 +60,7 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "icon":"images/rfparty.png",
+        "icon":"images/icon",
         "executableName": "rfparty"
       },
       "makers": [

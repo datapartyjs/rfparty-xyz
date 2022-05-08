@@ -8,10 +8,14 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = () => {
+
+  let icon = nativeImage.createFromPath(path.join(__dirname, 'images/rfparty-white-256.png')).resize({width:32, height:32})
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    icon: icon
   });
 
   // and load the index.html of the app.
@@ -23,7 +27,7 @@ const createWindow = () => {
   // Open the DevTools.
   mainWindow.webContents.closeDevTools();
 
-  let icon = nativeImage.createFromPath('./images/rfparty-white-256.png').resize({width:32, height:32})
+
 
   const tray = new Tray(icon)
   const contextMenu = Menu.buildFromTemplate([
