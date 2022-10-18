@@ -11,6 +11,7 @@ const moment = require('moment')
 const SearchSuggestions = {
   help: false,
   address: 'mac',
+  here: false,
   name: true,
   company: true,
   product: true,
@@ -21,7 +22,7 @@ const SearchSuggestions = {
   random: false,
   public: false,
   connectable: false,
-  duration: false,
+  duration: ['period'],
   error: false
 }
 
@@ -171,29 +172,7 @@ export class MainWindow {
 
     //console.log('selected ', gpxFiles.files.length, 'gpx files')
 
-    const fileLoaders = []
-
-    const scanDbFile = document.getElementById('scanDBFile')
-
-    const scanDbReader = new FileReader()
-    let dbLoad = new Promise((resolve, reject) => {
-      window.loadingState.startStep('read '+scanDbFile.files[0].name)
-      scanDbReader.onload = ()=>{
-
-        window.loadingState.completeStep('read '+scanDbFile.files[0].name)
-
-        //console.log('finished reading scan db')
-        resolve(window.rfparty.addScanDb(scanDbReader.result, scanDbFile.files[0].name))
-      }
-      scanDbReader.onabort = reject
-      scanDbReader.addEventListener('error', reject)
-    })
-
-    //console.log('scanDB', scanDbFile.files[0])
-    scanDbReader.readAsText(scanDbFile.files[0])
-    fileLoaders.push(dbLoad)
-
-    //await dbLoad
+    const locationLoaders = []
 
     for (let file of gpxFiles.files) {
       const reader = new FileReader()
@@ -220,13 +199,37 @@ export class MainWindow {
 
       reader.readAsText(file)
 
-      fileLoaders.push(fileLoad)
+      locationLoaders.push(fileLoad)
     }
 
 
-   await Promise.all(fileLoaders)
+    await Promise.all(locationLoaders)
 
-    
+    const scanLoaders = []
+
+    const scanDbFiles = document.getElementById('scanDbFiles')
+
+    for(let file of scanDbFiles.files ) {
+      
+      const scanDbReader = new FileReader()
+
+      let dbLoad = new Promise((resolve, reject) => {
+        window.loadingState.startStep('read '+file.name)
+        scanDbReader.onload = ()=>{
+  
+          window.loadingState.completeStep('read '+file.name)
+          window.rfparty.addScanDb.bind(window.rfparty)(scanDbReader.result, file.name).then(resolve).catch(reject)
+        }
+        scanDbReader.onabort = reject
+        scanDbReader.addEventListener('error', reject)
+      })
+  
+      //console.log('scanDB', file)
+      scanDbReader.readAsText(file)
+      scanLoaders.push(dbLoad)
+    }
+
+    await Promise.all(scanLoaders)
 
     let searchElem = document.getElementById('search-input')
     let searchStatusElem = document.getElementById('search-status')
@@ -249,6 +252,12 @@ export class MainWindow {
     window.rfparty.on('search-finished', (data)=>{
       window.MainWindow.hideDiv('search-hint')
       searchStatusElem.innerText = 'rendering ' + data.render.count + ' devices . . .'
+      window.MainWindow.showDiv('search-status')
+    })
+
+    window.rfparty.on('search-failed', (data)=>{
+      window.MainWindow.hideDiv('search-hint')
+      searchStatusElem.innerText = 'invalid search'
       window.MainWindow.showDiv('search-status')
     })
 

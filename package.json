@@ -1,7 +1,7 @@
 {
   "name": "rfparty",
   "productName": "rfparty",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "wireless situational awareness and debugging. its like a tricorder, for your wireless world.",
   "source": "src/index.html",
   "main": "./index.js",
@@ -11,19 +11,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel src/index.html",
-    "build": "parcel build --no-scope-hoist --public-url ./ src/index.html",
-    "electron-start": "electron-forge start",
-    "electron-package": "electron-forge package",
-    "electron-make": "electron-forge make",
+    "build": "parcel build --no-scope-hoist --public-url ./ --dist-dir ./docs src/index.html",
+    "electron-start": "npm run build; electron-forge start",
+    "electron-package": "npm run build; electron-forge package",
+    "electron-make": "npm run build; electron-forge make",
     "electron-publish": "electron-forge publish"
   },
-  "author": {
-    "name": "Dataparty",
-    "email": "code@dataparty.xyz"
-  },
+  "author": "Dataparty",
   "dependencies": {
     "@abandonware/noble": "^1.9.2-15",
-
     "csv": "^6.0.5",
     "debug": "^4.3.3",
     "electron-squirrel-startup": "^1.0.0",
@@ -60,7 +56,7 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "icon":"images/rfparty.png",
+        "icon": "images/icon",
         "executableName": "rfparty"
       },
       "makers": [

@@ -41,6 +41,11 @@ body{
   background: rgb(7, 48, 48);
 }
 
+.tutorial-video-iframe {
+  width: 50vw;
+  height: 25vh;
+}
+
 .device-info {
   z-index: 1;
   position: absolute;
