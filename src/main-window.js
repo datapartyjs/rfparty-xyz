@@ -76,6 +76,7 @@ export class MainWindow {
     MainWindow.showDiv('modal-shadow')
     MainWindow.showDiv('logo')
     MainWindow.showDiv('center-modal', 'remove', 'hidden', 'flex')
+    MainWindow.showDiv('tutorial-video')
 
   }
 
@@ -86,6 +87,7 @@ export class MainWindow {
     
 
     MainWindow.hideDiv('center-modal')
+    MainWindow.hideDiv('tutorial-video')
     MainWindow.hideDiv('logo')
     MainWindow.hideDiv('setup-modal')
     
@@ -96,6 +98,7 @@ export class MainWindow {
     MainWindow.showDiv('center-modal', 'remove', 'hidden', 'flex')
     MainWindow.showDiv('logo')
     MainWindow.showDiv('loading-bar')
+    MainWindow.hideDiv('tutorial-video')
 
     MainWindow.addRemoveClass('logo', 'add', 'rainbow-busy')
 
