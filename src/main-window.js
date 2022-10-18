@@ -11,6 +11,7 @@ const moment = require('moment')
 const SearchSuggestions = {
   help: false,
   address: 'mac',
+  here: false,
   name: true,
   company: true,
   product: true,
@@ -171,31 +172,7 @@ export class MainWindow {
 
     //console.log('selected ', gpxFiles.files.length, 'gpx files')
 
-    const fileLoaders = []
-
-    const scanDbFiles = document.getElementById('scanDbFiles')
-
-    for(let file of scanDbFiles.files ) {
-      
-      const scanDbReader = new FileReader()
-
-      let dbLoad = new Promise((resolve, reject) => {
-        window.loadingState.startStep('read '+file.name)
-        scanDbReader.onload = ()=>{
-  
-          window.loadingState.completeStep('read '+file.name)
-          window.rfparty.addScanDb.bind(window.rfparty)(scanDbReader.result, file.name).then(resolve).catch(reject)
-        }
-        scanDbReader.onabort = reject
-        scanDbReader.addEventListener('error', reject)
-      })
-  
-      //console.log('scanDB', file)
-      scanDbReader.readAsText(file)
-      fileLoaders.push(dbLoad)
-    }
-
-
+    const locationLoaders = []
 
     for (let file of gpxFiles.files) {
       const reader = new FileReader()
@@ -222,13 +199,37 @@ export class MainWindow {
 
       reader.readAsText(file)
 
-      fileLoaders.push(fileLoad)
+      locationLoaders.push(fileLoad)
     }
 
 
-   await Promise.all(fileLoaders)
+    await Promise.all(locationLoaders)
 
-    
+    const scanLoaders = []
+
+    const scanDbFiles = document.getElementById('scanDbFiles')
+
+    for(let file of scanDbFiles.files ) {
+      
+      const scanDbReader = new FileReader()
+
+      let dbLoad = new Promise((resolve, reject) => {
+        window.loadingState.startStep('read '+file.name)
+        scanDbReader.onload = ()=>{
+  
+          window.loadingState.completeStep('read '+file.name)
+          window.rfparty.addScanDb.bind(window.rfparty)(scanDbReader.result, file.name).then(resolve).catch(reject)
+        }
+        scanDbReader.onabort = reject
+        scanDbReader.addEventListener('error', reject)
+      })
+  
+      //console.log('scanDB', file)
+      scanDbReader.readAsText(file)
+      scanLoaders.push(dbLoad)
+    }
+
+    await Promise.all(scanLoaders)
 
     let searchElem = document.getElementById('search-input')
     let searchStatusElem = document.getElementById('search-status')

@@ -110,6 +110,8 @@ export class RFParty extends EventEmitter {
 
     this.db.addCollection('ble', {
       indices: ['firstseen', 'lastseen', 'address', 'duration', 'advertisement.localName',
+        'lastlocation.lat', 'lastlocation.lon',
+        'firstlocation.lat', 'firstlocation.lon',
         'connectable', 'addressType', 'services', 'hasUnknownService', 'ibeacon.uuid', 'findmy.maintained',
         'company', 'product', 'companyCode', 'productCode', 'appleContinuityTypeCode', 'appleIp']
     })
@@ -228,6 +230,41 @@ export class RFParty extends EventEmitter {
         case 'address':
           query = { 'address':  {'$contains':  term } }
           break
+        case 'here':
+          let viewport = this.map.getBounds()
+          query = { $or: [
+            { $and: [
+              {firstlocation: {$exists: true}},
+              {'lastlocation': {$ne: null}},
+              {'firstlocation': {$ne: null}},
+              {'firstlocation.lat': {$exists: true}},
+              {'firstlocation.lon': {$exists: true}},
+              {'firstlocation.lat': { $lt: viewport.getNorth() }},
+              {'firstlocation.lat': { $gt: viewport.getSouth() }},
+              {'firstlocation.lon': { $lt: viewport.getEast() }},
+              {'firstlocation.lon': { $gt: viewport.getWest() }},
+            ]},
+            { $and: [
+              {lastlocation: {$exists: true}},
+              {'lastlocation': {$ne: null}},
+              {'firstlocation': {$ne: null}},
+              {'lastlocation.lat': {$exists: true}},
+              {'lastlocation.lon': {$exists: true}},
+              {'lastlocation.lat': { $lt: viewport.getNorth() }},
+              {'lastlocation.lat': { $gt: viewport.getSouth() }},
+              {'lastlocation.lon': { $lt: viewport.getEast() }},
+              {'lastlocation.lon': { $gt: viewport.getWest() }},
+            ]}
+          ]}
+          break
+        case 'nolocation':
+          query = {'$or': [
+            {'firstlocation': {'$exists': false}},
+            {'lastlocation': {'$exists': false}},
+            {'firstlocation': null },
+            {'lastlocation': null },
+          ]}
+          break
         case 'name':
         case 'localname':
           console.log('select by name', tokens)
@@ -312,7 +349,7 @@ export class RFParty extends EventEmitter {
 
             query = {
               duration: {
-                $gt: moment.duration("PT" + term).as('ms')
+                $gt: moment.duration("PT" + term.toUpperCase()).as('ms') || 30*60000
               }
             }
 
@@ -556,6 +593,8 @@ export class RFParty extends EventEmitter {
 
       document.getElementById('device-info-company').textContent = companyText
 
+      document.getElementById('device-info-duration').textContent = moment.duration(device.duration).humanize()
+
       //document.getElementById('device-info-company').textContent = companyText
       
       //document.getElementById('device-info-product').textContent = productText
@@ -739,6 +778,101 @@ export class RFParty extends EventEmitter {
     let points = this.getTrackPointsByTime(starttime, endtime)
 
     return Leaflet.bounds(points)
+  }
+
+  checkTimeBoundIsBefore(a,b){
+    return a.lastseen < b.firstseen
+  }
+
+  checkTimeBoundIsAfter(a,b){
+    return a.firstseen > b.lastseen
+  }
+
+  checkTimeBoundOverlap(a,b){
+    return (
+      (a.firstseen >= b.firstseen && a.firstseen <= b.lastseen) ||    // start overlap
+      (a.lastseen >= b.firstseen && a.firstseen <= b.lastseen)  ||    // last overlap
+      (a.firstseen >= b.firstseen && a.lastseen <= b.lastseen ) ||    // a inside b
+      (b.firstseen >= a.firstseen && b.lastseen <= a.lastseen )       // b inside a
+    )
+  }
+
+  insertObservations(a, b){
+    let idx=0;
+
+    for(let seen of b.seen){
+      for(idx; idx<a.seen.length; idx++){
+        let current = a.seen[idx]
+        if(current.timestamp<seen.timestamp){ break; }
+        if(current.timestamp > seen.timestamp){ break; }
+      }
+  
+      if(idx < a.seen.length) {
+    
+        a.seen.splice( idx, 0, seen )
+      
+      } else {
+      
+        a.seen.push[seen]
+      
+      }
+    }
+
+    if(b.firstseen < a.firstseen){
+      a.firstseen = b.firstseen
+      a.firstlocation = b.firstlocation
+    
+    }
+
+    if(b.lastseen > a.lastseen){
+      a.lastseen = b.lastseen
+      a.lastlocation = b.lastlocation
+    }
+    
+    return a
+  }
+
+  mergeObservations(a, b){
+    let result = null
+    if(this.checkTimeBoundIsBefore(a,b)) {
+
+      a.seen = [].concat( a.seen, b.seen )
+      result = a
+      result.lastseen = b.lastseen
+      result.lastlocation = b.lastlocation
+
+    } else if(this.checkTimeBoundIsAfter(a,b)) {
+
+      a.seen = [].concat( b.seen, a.seen )
+      result = a
+      result.firstseen = b.firstseen
+      result.firstlocation = b.firstlocation
+
+    } else if(this.checkTimeBoundOverlap(a,b)) {
+      result = this.insertObservations(a,b)
+    }
+
+    result.duration = Math.abs( moment(result.firstseen).diff(result.lastseen) )
+
+    return result
+  }
+
+  mergeBLEDevice(device){
+    let bleColl = this.db.getCollection('ble')
+    let dbDevice = this.getBLEDevice(device.address)
+
+
+    if(!dbDevice) {
+
+      bleColl.insert(device)
+
+    } else {
+      
+      dbDevice = this.mergeObservations(dbDevice, device)
+      bleColl.update(dbDevice)
+
+    }
+
   }
 
   async addScanDb(serializedDb, name) {
@@ -942,7 +1076,7 @@ export class RFParty extends EventEmitter {
                 uuid: manufacturerData.slice(4, 19).toString('hex'),
                 major: manufacturerData.slice(20, 21).toString('hex'),
                 minor: manufacturerData.slice(22, 23).toString('hex'),
-                txPower: manufacturerData.readInt8(24)
+                txPower: (manufacturerData.length > 24) ? manufacturerData.readInt8(24) : undefined
               }
             }
           }
@@ -987,14 +1121,15 @@ export class RFParty extends EventEmitter {
         }
       }
 
-      bleColl.insert(doc)
+      this.mergeBLEDevice(doc)
+      //bleColl.insert(doc)
     }
 
     for (let device of scanDbWifi.chain().find().data({ removeMeta: true })){
       window.loadingState.completePart('index '+name)
 
       count++
-      if(count%300 == 0){
+      if(count%3000 == 0){
         await delay(1)
       }
     }
