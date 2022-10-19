@@ -1,7 +1,7 @@
 {
   "name": "rfparty",
   "productName": "rfparty",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "wireless situational awareness and debugging. its like a tricorder, for your wireless world.",
   "source": "src/index.html",
   "main": "./index.js",
@@ -45,6 +45,8 @@
     "@electron-forge/maker-snap": "^6.0.0-beta.63",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
     "@electron-forge/maker-zip": "^6.0.0-beta.63",
+    "@parcel/packager-raw-url": "^2.5.0",
+    "@parcel/transformer-jsonld": "^2.5.0",
     "buffer": "^6.0.3",
     "electron": "18.1.0",
     "events": "^3.3.0",
