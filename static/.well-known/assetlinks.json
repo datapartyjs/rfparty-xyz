@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "xyz.dataparty.rfparty",
+      "sha256_cert_fingerprints":
+        ["92:59:A0:FC:C5:94:34:F5:26:BE:04:B2:7F:4D:4B:50:6F:60:2A:E9:4C:31:A1:3D:7B:CD:6F:EB:E0:24:3A:8B"]
+    }
+  }
+]
