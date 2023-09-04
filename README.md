@@ -12,9 +12,12 @@
 
 See [rfparty-monitor](https://github.com/datapartyjs/rfparty-monitor) for data collection tooling
 
+See [rfparty-mobile](https://github.com/datapartyjs/rfparty-mobile) for Android version.
+
 ## Follow and Support
 
  * [Twitter](https://twitter.com/datapartydao)
+ * [Mastodon](https://partyon.xyz/@rfparty)
  * [Buy it on Google Play](https://play.google.com/store/apps/details?id=xyz.dataparty.rfparty)
  * Donate 🤲
    * https://ko-fi.com/dataparty
