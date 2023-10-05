@@ -23,14 +23,16 @@ const TILE_SERVER_DEFAULT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const TILE_SERVER_DARK = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
 const TILE_SERVER_LIGHT = 'https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png'
 
-const TILE_SERVER_MAPBOX = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}'
+//const TILE_SERVER_MAPBOX = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}'
+const TILE_SERVER_MAPBOX = 'https://api.rfparty.xyz/map/{id}/tiles/{z}/{x}/{y}'
 const TILE_SERVER_MAPBOX_CONFIG = {
   //attribution: '<span id="map-attribution" class="map-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></span>',
     maxZoom: 20,
-    id: 'mapbox/dark-v10',
+    minZoom: 3,
+    id: 'dark',
     tileSize: 512,
     zoomOffset: -1,
-    accessToken: 'pk.eyJ1IjoiZGF0YXBhcnR5IiwiYSI6ImNremFnMnlyZjIzZHMycG5mczZ1bDljM2gifQ.uGoEE_YpTbIlELvytTzbNQ'
+    //accessToken: 'pk.eyJ1IjoiZGF0YXBhcnR5IiwiYSI6ImNremFnMnlyZjIzZHMycG5mczZ1bDljM2gifQ.uGoEE_YpTbIlELvytTzbNQ'
 }
 
 async function delay(ms=100){
@@ -82,12 +84,13 @@ export class RFParty extends EventEmitter {
 
     this.map = Leaflet.map(divId,{
       attributionControl: false
-    }).setView([47.6, -122.35], 13)
+    })/*.setView([47.6, -122.35], 12)*/
 
     Leaflet.tileLayer(TILE_SERVER_MAPBOX, TILE_SERVER_MAPBOX_CONFIG).addTo(this.map);
     //Leaflet.control.attribution({prefix: '<span id="map-attribution" class="map-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></span>' })
     //  .addTo(this.map)
 
+   this.map.setView([47.6, -122.35], 12)
 
     this.db = new Loki('session')
 
