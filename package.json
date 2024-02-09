@@ -1,7 +1,7 @@
 {
   "name": "rfparty",
   "productName": "rfparty",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "wireless situational awareness and debugging. its like a tricorder, for your wireless world.",
   "source": "src/index.html",
   "main": "./index.js",
@@ -19,7 +19,7 @@
   },
   "author": "Dataparty",
   "dependencies": {
-    "@abandonware/noble": "^1.9.2-15",
+    "@dataparty/api": "git://github.com/datapartyjs/dataparty-api.git",
     "csv": "^6.0.5",
     "debug": "^4.3.3",
     "electron-squirrel-startup": "^1.0.0",
@@ -32,18 +32,17 @@
     "lokijs": "^1.5.12",
     "moment": "^2.17.1",
     "moment-timezone": "^0.5.11",
-    "node-wifi": "^2.0.16",
     "xml-js": "^1.6.11"
   },
   "license": "Apache-2.0",
   "devDependencies": {
     "@davidwinter/electron-forge-maker-snap": "^2.0.7",
-    "@electron-forge/cli": "^6.0.0-beta.63",
-    "@electron-forge/maker-deb": "^6.0.0-beta.63",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.63",
-    "@electron-forge/maker-snap": "^6.0.0-beta.63",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
-    "@electron-forge/maker-zip": "^6.0.0-beta.63",
+    "@electron-forge/cli": "7.2.0",
+    "@electron-forge/maker-deb": "7.2.0",
+    "@electron-forge/maker-rpm": "7.2.0",
+    "@electron-forge/maker-snap": "7.2.0",
+    "@electron-forge/maker-squirrel": "7.2.0",
+    "@electron-forge/maker-zip": "7.2.0",
     "@parcel/packager-raw-url": "^2.5.0",
     "@parcel/transformer-jsonld": "^2.5.0",
     "buffer": "^6.0.3",
@@ -80,8 +79,9 @@
           }
         },
         {
-          "name": "@davidwinter/electron-forge-maker-snap",
+          "name": "@electron-forge/maker-snap",
           "config": {
+            "version": "0.2.0",
             "features": {
               "webgl": true
             },

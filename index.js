@@ -19,12 +19,10 @@ const createWindow = () => {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'docs/index.html'));
   //mainWindow.loadURL(`file://${__dirname}/dist/index.html`)
 
   mainWindow.setMenuBarVisibility(false);
-
-  // Open the DevTools.
   mainWindow.webContents.closeDevTools();
 
 
