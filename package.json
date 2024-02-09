@@ -10,12 +10,14 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel src/index.html",
+    "start": "electron-forge start",
     "build": "parcel build --no-scope-hoist --public-url ./ --dist-dir ./docs src/index.html",
     "electron-start": "npm run build; electron-forge start",
     "electron-package": "npm run build; electron-forge package",
     "electron-make": "npm run build; electron-forge make",
-    "electron-publish": "electron-forge publish"
+    "electron-publish": "electron-forge publish",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "author": "Dataparty",
   "dependencies": {
@@ -37,12 +39,13 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@davidwinter/electron-forge-maker-snap": "^2.0.7",
-    "@electron-forge/cli": "7.2.0",
-    "@electron-forge/maker-deb": "7.2.0",
-    "@electron-forge/maker-rpm": "7.2.0",
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-deb": "^7.2.0",
+    "@electron-forge/maker-rpm": "^7.2.0",
     "@electron-forge/maker-snap": "7.2.0",
-    "@electron-forge/maker-squirrel": "7.2.0",
-    "@electron-forge/maker-zip": "7.2.0",
+    "@electron-forge/maker-squirrel": "^7.2.0",
+    "@electron-forge/maker-zip": "^7.2.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
     "@parcel/packager-raw-url": "^2.5.0",
     "@parcel/transformer-jsonld": "^2.5.0",
     "buffer": "^6.0.3",
